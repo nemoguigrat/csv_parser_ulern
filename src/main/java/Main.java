@@ -1,23 +1,15 @@
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
+import java.awt.*;
 
 public class Main {
-    public static void main(String[] args) {
-        try{
+    public static void main(String[] args) throws Exception {
             var a = CSVParser.ParseHappynesCountryCsv("HappynesCountry2016.csv");
             var b = DbHandler.getInstance();
-            b.CreateTable();
-            b.addCountryList(a);
+            var c = b.getCountryGenerosity();
 
-        } catch (Exception e){
-            System.out.println(e.getMessage());
-        }
+            EventQueue.invokeLater(() -> {
+                var ex = new CountryGenerosityChart(c);
+                ex.setVisible(true);
+            });
     }
 }
 

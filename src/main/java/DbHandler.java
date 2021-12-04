@@ -4,7 +4,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DbHandler {
 
@@ -27,8 +29,7 @@ public class DbHandler {
         System.out.println("База Подключена!");
     }
 
-    public void CreateTable()
-    {
+    public void CreateTable() {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS 'happynes_country' " +
                     "('country' VARCHAR(50) PRIMARY KEY, " +
@@ -47,6 +48,16 @@ public class DbHandler {
             System.out.println("Таблица создана или уже существует.");
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    public Map<String, Float> getCountryGenerosity() throws SQLException {
+        try (Statement statement = this.connection.createStatement()) {
+            Map<String, Float> dataset = new HashMap<>();
+            ResultSet dataFromDb = statement.executeQuery("SELECT country, generosity FROM happynes_country");
+            while (dataFromDb.next())
+                dataset.put(dataFromDb.getString("country"), dataFromDb.getFloat("generosity"));
+            return dataset;
         }
     }
 
