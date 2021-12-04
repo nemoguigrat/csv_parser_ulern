@@ -1,0 +1,84 @@
+import org.sqlite.JDBC;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.sql.*;
+import java.util.Collections;
+import java.util.List;
+
+public class DbHandler {
+
+    // Используем шаблон одиночка, чтобы не плодить множество
+    // экземпляров класса DbHandler
+    private static DbHandler instance = null;
+    // Объект, в котором будет храниться соединение с БД
+    private Connection connection;
+
+    public static DbHandler getInstance() throws SQLException, ClassNotFoundException, URISyntaxException {
+        if (instance == null)
+            instance = new DbHandler();
+        return instance;
+    }
+
+    private DbHandler() throws SQLException, URISyntaxException {
+        URI resource = ClassLoader.getSystemResource("database.sqlite3").toURI();
+        // Выполняем подключение к базе данных
+        this.connection = DriverManager.getConnection("jdbc:sqlite::resource:database.sqlite3");
+        System.out.println("База Подключена!");
+    }
+
+    public void CreateTable()
+    {
+        try (Statement statement = this.connection.createStatement()) {
+            statement.execute("CREATE TABLE IF NOT EXISTS 'happynes_country' " +
+                    "('country' VARCHAR(50) PRIMARY KEY, " +
+                    "'region' VARCHAR(100)," +
+                    "'rank' INTEGER," +
+                    "'happynesScore' FLOAT," +
+                    "'lowerConfidenceInterval' FLOAT," +
+                    "'upperConfidenceInterval' FLOAT," +
+                    "'economy' FLOAT," +
+                    "'family' FLOAT," +
+                    "'health' FLOAT," +
+                    "'freedom' FLOAT," +
+                    "'trust' FLOAT," +
+                    "'generosity' FLOAT," +
+                    "'dystopiaResidual' FLOAT);");
+            System.out.println("Таблица создана или уже существует.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addCountryList(List<CountryHappynes> country) {
+        // Создадим подготовленное выражение, чтобы избежать SQL-инъекций
+        if (country.size() < 1)
+            return;
+        String sqlQuery = "INSERT INTO happynes_country VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+        try (PreparedStatement statement = this.connection.prepareStatement(sqlQuery)) {
+            connection.setAutoCommit(false);
+            for (CountryHappynes countryObj : country) {
+                statement.setObject(1, countryObj.getCountry());
+                statement.setObject(2, countryObj.getRegion());
+                statement.setObject(3, countryObj.getRank());
+                statement.setObject(4, countryObj.getHappynesScore());
+                statement.setObject(5, countryObj.getLowerConfidenceInterval());
+                statement.setObject(6, countryObj.getUpperConfidenceInterval());
+                statement.setObject(7, countryObj.getEconomy());
+                statement.setObject(8, countryObj.getFamily());
+                statement.setObject(9, countryObj.getHealth());
+                statement.setObject(10, countryObj.getFreedom());
+                statement.setObject(11, countryObj.getTrust());
+                statement.setObject(12, countryObj.getGenerosity());
+                statement.setObject(13, countryObj.getDystopiaResidual());
+
+                statement.addBatch();
+            }
+            statement.executeBatch();
+            statement.clearBatch();
+            connection.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}

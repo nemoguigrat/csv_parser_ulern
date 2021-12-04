@@ -82,4 +82,16 @@ public class CountryHappynes {
     public float getTrust() {
         return trust;
     }
+
+    public float[] getFloatData() {return new float[] {
+        happynesScore,
+        lowerConfidenceInterval,
+        upperConfidenceInterval,
+        economy,
+        family,
+        health,
+        freedom,
+        trust,
+        generosity};
+    }
 }
