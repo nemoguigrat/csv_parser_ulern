@@ -2,6 +2,7 @@ import org.sqlite.JDBC;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyPair;
 import java.sql.*;
 import java.util.Collections;
 import java.util.HashMap;
@@ -58,6 +59,15 @@ public class DbHandler {
             while (dataFromDb.next())
                 dataset.put(dataFromDb.getString("country"), dataFromDb.getFloat("generosity"));
             return dataset;
+        }
+    }
+
+    public Tuple<String, Float> getCountryWithMinGenerosity() throws SQLException {
+        try (Statement statement = this.connection.createStatement()) {
+            Map<String, Float> dataset = new HashMap<>();
+            ResultSet dataFromDb = statement.executeQuery("SELECT country, generosity FROM happynes_country WHERE generosity = (" +
+                    "SELECT MIN(generosity) FROM happynes_country WHERE region = 'Middle East and Northern Africa' OR region = 'Central and Eastern Europe')");
+            return new Tuple<>(dataFromDb.getString("country"), dataFromDb.getFloat("generosity"));
         }
     }
 
