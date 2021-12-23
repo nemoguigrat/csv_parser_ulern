@@ -62,6 +62,7 @@ public class DbHandler {
         }
     }
 
+    // TODO не берет в расчет данные, где generosity = 0, поэтмоу возможно что это не правильный варинт решения
     public Tuple<String, Float> getCountryWithMinGenerosity() throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             Map<String, Float> dataset = new HashMap<>();

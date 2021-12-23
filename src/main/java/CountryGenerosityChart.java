@@ -1,18 +1,14 @@
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.block.BlockBorder;
-import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.category.BarRenderer;
-import org.jfree.chart.title.TextTitle;
-import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.category.SlidingCategoryDataset;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.HashMap;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.util.Map;
 
 public class CountryGenerosityChart extends JFrame{
@@ -22,38 +18,63 @@ public class CountryGenerosityChart extends JFrame{
 
     private void initUI(Map<String, Float> data) {
 
-        CategoryDataset dataset = createDataset(data);
+        SlidingCategoryDataset dataset = createDataset(data);
 
         JFreeChart chart = createChart(dataset);
-        ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        chartPanel.setBackground(Color.white);
+        ChartPanel chartPanel = createChartPanel(chart);
+        JScrollBar scroller = createScrollBar(dataset);
+        JPanel scrollPanel = createScrollPanell(scroller);
 
         add(chartPanel);
-
+        add(scrollPanel, BorderLayout.SOUTH);
         pack();
-        setTitle("Bar chart");
+        setTitle("Generosity chart");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    private CategoryDataset createDataset(Map<String, Float> data){
+    private SlidingCategoryDataset createDataset(Map<String, Float> data){
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         for (String key : data.keySet())
             dataset.setValue(data.get(key), "Generosity", key);
-        return dataset;
+        return new SlidingCategoryDataset(dataset,0, 10);
     }
 
-    private JFreeChart createChart(CategoryDataset dataset)
-    {
-        JFreeChart barChart = ChartFactory.createBarChart(
+    private JFreeChart createChart(SlidingCategoryDataset dataset) {
+        return ChartFactory.createBarChart(
                 "Generosity country",
                 "",
                 "Generosity",
                 dataset,
                 PlotOrientation.VERTICAL,
                 false, true, false);
+    }
 
-        return barChart;
+    private JScrollBar createScrollBar(SlidingCategoryDataset dataset){
+        JScrollBar scroller =  new JScrollBar(SwingConstants.HORIZONTAL, 0, 10, 0,
+                50);
+        scroller.addAdjustmentListener(new AdjustmentListener() {
+            @Override
+            public void adjustmentValueChanged(AdjustmentEvent e) {
+                dataset.setFirstCategoryIndex(scroller.getValue());
+            }
+        });
+        return scroller;
+    }
+
+    private ChartPanel createChartPanel(JFreeChart chart){
+        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setPreferredSize(new Dimension(800, 600));
+        chartPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        chartPanel.setBackground(Color.white);
+        return chartPanel;
+    }
+
+    private JPanel createScrollPanell(JScrollBar scroller){
+        JPanel scrollPanel = new JPanel(new BorderLayout());
+        scrollPanel.add(scroller);
+        scrollPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+        scrollPanel.setBackground(Color.white);
+        return scrollPanel;
     }
 }
