@@ -17,7 +17,7 @@ public class DbHandler {
     // Объект, в котором будет храниться соединение с БД
     private Connection connection;
 
-    public static DbHandler getInstance() throws SQLException, ClassNotFoundException, URISyntaxException {
+    public static DbHandler getInstance() throws SQLException, URISyntaxException {
         if (instance == null)
             instance = new DbHandler();
         return instance;
@@ -62,13 +62,28 @@ public class DbHandler {
         }
     }
 
-    // TODO не берет в расчет данные, где generosity = 0, поэтмоу возможно что это не правильный варинт решения
     public Tuple<String, Float> getCountryWithMinGenerosity() throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             Map<String, Float> dataset = new HashMap<>();
             ResultSet dataFromDb = statement.executeQuery("SELECT country, generosity FROM happynes_country WHERE generosity = (" +
                     "SELECT MIN(generosity) FROM happynes_country WHERE region = 'Middle East and Northern Africa' OR region = 'Central and Eastern Europe')");
             return new Tuple<>(dataFromDb.getString("country"), dataFromDb.getFloat("generosity"));
+        }
+    }
+
+    public String getMiddleCountry() throws SQLException {
+        try (Statement statement = this.connection.createStatement()) {
+            ResultSet middledata = statement.executeQuery(
+                    "SELECT MIN(ABS((SELECT AVG(economy) FROM happynes_country)-economy) + " +
+                            "ABS((SELECT AVG(family) FROM happynes_country)-family) +" +
+                            "ABS((SELECT AVG(health) FROM happynes_country)-health) +" +
+                            "ABS((SELECT AVG(freedom) FROM happynes_country)-freedom) +" +
+                            "ABS((SELECT AVG(generosity) FROM happynes_country)-generosity) +" +
+                            "ABS((SELECT AVG(trust) FROM happynes_country)-trust) +" +
+                            "ABS((SELECT AVG(dystopiaResidual) FROM happynes_country)-dystopiaResidual)) as Result, country " +
+                            "FROM happynes_country " +
+                            "WHERE Region = 'Western Europe' or Region = 'Sub-Saharan Africa'");
+            return middledata.getString("Country");
         }
     }
 
