@@ -10,27 +10,33 @@ import java.util.List;
 import java.util.Map;
 
 public class DbHandler {
-
-    // Используем шаблон одиночка, чтобы не плодить множество
-    // экземпляров класса DbHandler
     private static DbHandler instance = null;
-    // Объект, в котором будет храниться соединение с БД
+
     private Connection connection;
 
-    public static DbHandler getInstance() throws SQLException, URISyntaxException {
+    public static DbHandler getInstance(){
         if (instance == null)
             instance = new DbHandler();
         return instance;
     }
 
-    private DbHandler() throws SQLException, URISyntaxException {
-        URI resource = ClassLoader.getSystemResource("database.sqlite3").toURI();
-        // Выполняем подключение к базе данных
-        this.connection = DriverManager.getConnection("jdbc:sqlite::resource:database.sqlite3");
-        System.out.println("База Подключена!");
+    private DbHandler(){
+        try {
+            URI resource = ClassLoader.getSystemResource("database.sqlite3").toURI();
+            // Выполняем подключение к базе данных
+            this.connection = DriverManager.getConnection("jdbc:sqlite::resource:database.sqlite3");
+            System.out.println("База Подключена!");
+        } catch (SQLException e) {
+            System.out.println("Драйвер базы данных не был подключен!");
+            e.printStackTrace();
+        } catch (URISyntaxException e){
+            System.out.println("Невозможно найти указанный файл!");
+            e.printStackTrace();
+
+        }
     }
 
-    public void CreateTable() {
+    public void createTable() {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS 'happynes_country' " +
                     "('country' VARCHAR(50) PRIMARY KEY, " +
@@ -52,26 +58,33 @@ public class DbHandler {
         }
     }
 
-    public Map<String, Float> getCountryGenerosity() throws SQLException {
+    public Map<String, Float> getCountryGenerosity(){
         try (Statement statement = this.connection.createStatement()) {
             Map<String, Float> dataset = new HashMap<>();
             ResultSet dataFromDb = statement.executeQuery("SELECT country, generosity FROM happynes_country");
             while (dataFromDb.next())
                 dataset.put(dataFromDb.getString("country"), dataFromDb.getFloat("generosity"));
             return dataset;
+        } catch (SQLException e){
+            System.out.println("Ошибка при выполнении запроса!");
+            e.printStackTrace();
+            return null;
         }
     }
 
-    public Tuple<String, Float> getCountryWithMinGenerosity() throws SQLException {
+    public Tuple<String, Float> getCountryWithMinGenerosity(){
         try (Statement statement = this.connection.createStatement()) {
-            Map<String, Float> dataset = new HashMap<>();
             ResultSet dataFromDb = statement.executeQuery("SELECT country, generosity FROM happynes_country WHERE generosity = (" +
                     "SELECT MIN(generosity) FROM happynes_country WHERE region = 'Middle East and Northern Africa' OR region = 'Central and Eastern Europe')");
             return new Tuple<>(dataFromDb.getString("country"), dataFromDb.getFloat("generosity"));
+        } catch (SQLException e){
+            System.out.println("Невозможно получить данные о стране");
+            e.printStackTrace();
+            return null;
         }
     }
 
-    public String getMiddleCountry() throws SQLException {
+    public String getMiddleCountry(){
         try (Statement statement = this.connection.createStatement()) {
             ResultSet middledata = statement.executeQuery(
                     "SELECT MIN(ABS((SELECT AVG(economy) FROM happynes_country)-economy) + " +
@@ -82,13 +95,16 @@ public class DbHandler {
                             "ABS((SELECT AVG(trust) FROM happynes_country)-trust) +" +
                             "ABS((SELECT AVG(dystopiaResidual) FROM happynes_country)-dystopiaResidual)) as Result, country " +
                             "FROM happynes_country " +
-                            "WHERE Region = 'Western Europe' or Region = 'Sub-Saharan Africa'");
+                            "WHERE Region = 'Southeastern Asia' or Region = 'Sub-Saharan Africa'");
             return middledata.getString("Country");
+        } catch (SQLException e){
+            System.out.println("Невозможно получить данные о стране");
+            e.printStackTrace();
+            return "";
         }
     }
 
     public void addCountryList(List<CountryHappynes> country) {
-        // Создадим подготовленное выражение, чтобы избежать SQL-инъекций
         if (country.size() < 1)
             return;
         String sqlQuery = "INSERT INTO happynes_country VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";

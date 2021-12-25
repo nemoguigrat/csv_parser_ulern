@@ -51,8 +51,8 @@ public class CountryGenerosityChart extends JFrame{
     }
 
     private JScrollBar createScrollBar(SlidingCategoryDataset dataset){
-        JScrollBar scroller =  new JScrollBar(SwingConstants.HORIZONTAL, 0, 10, 0,
-                50);
+        int maxSize = dataset.getUnderlyingDataset().getColumnCount();
+        JScrollBar scroller =  new JScrollBar(SwingConstants.HORIZONTAL, 0, 10, 0, maxSize);
         scroller.addAdjustmentListener(new AdjustmentListener() {
             @Override
             public void adjustmentValueChanged(AdjustmentEvent e) {

@@ -19,8 +19,8 @@ public class CSVParser {
             String[] headers = fileLines.remove(0).split(",");
             for (String fileLine : fileLines) {
                 String[] values = fileLine.split(",");
-                Map<String, String> a = IntStream.range(0, headers.length).boxed().collect(Collectors.toMap(i -> headers[i], i -> values[i]));
-                countyList.add(new CountryHappynes(a));
+                Map<String, String> data = IntStream.range(0, headers.length).boxed().collect(Collectors.toMap(i -> headers[i], i -> values[i]));
+                countyList.add(new CountryHappynes(data));
             }
             return countyList;
         } catch (Exception exception){
